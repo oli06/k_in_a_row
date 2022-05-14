@@ -1,5 +1,7 @@
 package k_in_a_row
 
+import "fmt"
+
 type point struct {
 	x int
 	y int
@@ -10,6 +12,7 @@ type kInARowGame struct {
 	users    []int
 	k        int
 	lastMove *point
+	border   point
 }
 
 func isGameWonWithToken(game kInARowGame) (bool, int) {
@@ -116,6 +119,14 @@ func placeToken(placement *point, usr int, game *kInARowGame) {
 		panic("user is not allowed to play!")
 	}
 
+	if isOutsideBorders(placement, *game) {
+		panic("token cant be placed outside the border!")
+	}
+
+	if isGravityUsed(placement, *game) {
+		panic("token missplacement! Cant place token in the air")
+	}
+
 	if game.board[*placement] == 0 {
 		game.board[*placement] = usr
 		game.lastMove = placement
@@ -145,4 +156,44 @@ func getCurrentUser(game kInARowGame) int {
 	}
 
 	return game.users[(lastUsrIndex+1)%len(game.users)]
+}
+
+func isGravityUsed(placement *point, game kInARowGame) bool {
+	//check if all x coordinates below placement.x are placed (i.e != 0)
+
+	y_index := placement.y - 1
+	for y_index > -1 {
+		if getValueAt(point{placement.x, y_index}, game) == 0 {
+			return true
+		}
+
+		y_index--
+	}
+
+	return false
+}
+
+func isOutsideBorders(placement *point, game kInARowGame) bool {
+	return !(placement.x < game.border.x && placement.y < game.border.y)
+}
+
+//TODO: test
+func print(game kInARowGame) {
+	for i := game.border.x - 1; i >= 0; i-- {
+		should_print := false
+		row := ""
+		for j := game.border.y - 1; j >= 0; j-- {
+			val := getValueAt(point{i, j}, game)
+			if val != 0 {
+				should_print = true
+				row += fmt.Sprint(val)
+			} else {
+				row += "_"
+			}
+		}
+
+		if should_print {
+			fmt.Println(row)
+		}
+	}
 }
